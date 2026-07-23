@@ -1,0 +1,35 @@
+name: "Test Concurrency Lock"
+
+on:
+  # Allows you to manually trigger this workflow from the GitHub UI
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target Environment'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - prod
+
+# 1. THE CONCURRENCY LOCK
+concurrency:
+  group: lock-${{ github.event.inputs.environment }}
+  cancel-in-progress: false # Forces incoming runs to wait in line rather than cancelling active ones
+
+jobs:
+  simulate-task:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log Start Time
+        run: echo "Job started for ${{ github.event.inputs.environment }} at $(date)"
+
+      - name: Simulate Heavy Task (30 Second Sleep)
+        run: |
+          echo "Holding the lock..."
+          sleep 30
+          echo "Task complete!"
+
+      - name: Log End Time
+        run: echo "Job finished for ${{ github.event.inputs.environment }} at $(date)"
